@@ -4,7 +4,7 @@ from features.EnergyFeatures import EnergyFeatures
 from features.MatchingFeatures import MatchingFeatures
 from features.MrnaFeatures import MrnaFeatures
 from features.SeedFeatures import SeedFeatures
-from utils.logger import logger
+# from utils.logger import logger
 from utils.utilsfile import apply_in_chunks, get_wrapper, read_csv, to_csv
 from pandas import Series, DataFrame
 from duplex.Duplex import Duplex

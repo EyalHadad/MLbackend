@@ -10,7 +10,7 @@ from utils.utilsfile import get_subsequence_by_coordinates
 
 
 import os
-os.environ['PATH'] = '/home/efrco/.conda/envs/my_env/bin:/storage/modules/packages/anaconda3/bin:/storage/modules/bin:/storage/modules/packages/anaconda3/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/storage/modules/packages/matlab/R2019B/bin:/home/efrco/.local/bin:/home/efrco/bin'
+os.environ['PATH'] = '/home/kenyag/.conda/envs/efrat_env/bin/'
 
 class EnergyFeatures(Features):
     def extract_features(self):
@@ -43,24 +43,18 @@ class EnergyFeatures(Features):
         # print(len(mrna_surrounding100))
         assert len(constraint) == len(mrna_surrounding100), \
             f"""constraint and mrna_surrounding100 are not in the same length
-mrna_site: {mrna_site}
-constraint:          {constraint}
-mrna_surrounding100: {mrna_surrounding100}"""
+            mrna_site: {mrna_site}
+            constraint:          {constraint}
+            mrna_surrounding100: {mrna_surrounding100}"""
 
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            tmp_dir = Path(tmpdirname)
+        # instead of writing the result into temp file i (Ken) run the rna.fold on a string.
 
-            mrna100file_in = tmp_dir / 'mrna100_with_constraints.fa'
-            mrna100file_out = tmp_dir /'mrna100_with_constraints.result'
-            with mrna100file_in.open('w') as f:
-                f.write(mrna_surrounding100 + "\n" + constraint + "\n")
+        str_instead_of_tempfile = mrna_surrounding100 + "\n" + constraint + "\n"
+        cmfe = RNA.fold(str_instead_of_tempfile)[1]
 
-            cmd = "RNAfold -C {infile} > {outfile}".format(infile=mrna100file_in, outfile=mrna100file_out)
-            status = call(cmd, cwd=tmp_dir.resolve(), shell=True)
 
-            with mrna100file_out.open() as f:
-                twolines = f.readlines()
-            cmfe =float(re.findall("\d+\.\d+", twolines[1])[0])*(-1)
+        # end of changed part, return removed part here to return to tempfile approach
+
 
         MFE = {'Energy_MEF_Seed': round(MFE_Seed[1], 4),
                'Energy_MEF_3p': round(MFE_3p[1], 4),
@@ -73,3 +67,18 @@ mrna_surrounding100: {mrna_surrounding100}"""
         return MFE
 
 
+#removed part:
+# with tempfile.TemporaryDirectory() as tmpdirname:
+        #     tmp_dir = Path(tmpdirname)
+        #
+        #     # mrna100file_in = tmp_dir / 'mrna100_with_constraints.fa'
+        #     # mrna100file_out = tmp_dir /'mrna100_with_constraints.result'
+        #     # with mrna100file_in.open('w') as f:
+        #         f.write(mrna_surrounding100 + "\n" + constraint + "\n")
+        #
+        #     cmd = "RNAfold -C {infile} > {outfile}".format(infile=mrna100file_in, outfile=mrna100file_out)
+        #     status = call(cmd, cwd=tmp_dir.resolve(), shell=True)
+        #
+        #     with mrna100file_out.open() as f:
+        #         twolines = f.readlines()
+        #     cmfe =float(re.findall("\d+\.\d+", twolines[1])[0])*(-1)

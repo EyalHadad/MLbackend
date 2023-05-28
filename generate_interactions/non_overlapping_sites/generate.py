@@ -1,27 +1,27 @@
 from pathlib import Path
 from datetime import datetime
-from utils.logger import logger
+# from utils.logger import logger
 from consts.mirna_utils import MIRBASE_FILE
 from consts.global_consts import DUPLEX_DICT
-from utils.utilsfile import read_csv, to_csv
-import pandas as pd
-import numpy as np
+# from utils.utilsfile import read_csv, to_csv
+# import pandas as pd
+# import numpy as np
 from utils.utilsfile import *
 from consts.global_consts import ROOT_PATH, DATA_PATH, NEGATIVE_DATA_PATH, MERGE_DATA, DATA_PATH_INTERACTIONS
-from duplex.ViennaDuplex import ViennaDuplex
+# from duplex.ViennaDuplex import ViennaDuplex
 from duplex.ViennaDuplex import *
 import random
 from features.SeedFeatures import *
 # import MirBaseUtils.mirBaseUtils as MBU
-import mirna_utils.mirbase as MBU
-from multiprocessing import Process
-from consts.global_consts import CONFIG
+# import mirna_utils.mirbase as MBU
+# from multiprocessing import Process
+# from consts.global_consts import CONFIG
 from duplex.Duplex import Duplex
 
 
 def valid_negative_seq(mir, mrna):
     duplex_cls: Duplex = DUPLEX_DICT['ViennaDuplex']
-    logger.info(f"{ViennaDuplex} do_duplex")
+    # logger.info(f"{ViennaDuplex} do_duplex")
     dp = duplex_cls.fromChimera(mir, mrna)
     try:
         canonic_seed = dp.canonical_seed

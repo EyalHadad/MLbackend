@@ -7,8 +7,8 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 import pandas as pd
 import numpy as np
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+# from airflow import DAG
+# from airflow.operators.python_operator import PythonOperator
 from pandas import DataFrame
 from Bio.Blast.Applications import NcbiblastnCommandline
 from consts.biomart import BIOMART_DATA_PATH
@@ -18,7 +18,7 @@ import sys
 
 sys.path.append('/sise/home/efrco/efrco-master/utils/')
 
-from logger import logger
+# from logger import logger
 # from utils.logger import logger
 import subprocess
 from more_itertools import chunked
@@ -163,14 +163,14 @@ def call_wrapper(cmd: str, cwd: Path):
     return subprocess.call(cmd.split(), cwd=cwd.resolve())
 
 
-def DirectorySpecificBashOperator(task_id: str, cmd: str, dag: DAG, cwd: Path) -> \
-        PythonOperator:
-    return PythonOperator(
-        task_id=task_id,
-        python_callable=call_wrapper,
-        op_kwargs={"cmd": cmd,
-                   'cwd': cwd},
-        dag=dag)
+# def DirectorySpecificBashOperator(task_id: str, cmd: str, dag: DAG, cwd: Path) -> \
+#         PythonOperator:
+#     return PythonOperator(
+#         task_id=task_id,
+#         python_callable=call_wrapper,
+#         op_kwargs={"cmd": cmd,
+#                    'cwd': cwd},
+#         dag=dag)
 
 
 def apply_in_chunks(df: DataFrame, func: Callable, number_of_chunks: int=5):

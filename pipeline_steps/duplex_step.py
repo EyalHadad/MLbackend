@@ -4,9 +4,9 @@ import pandas as pd
 from consts.global_consts import HUMAN_SITE_EXTENDED_LEN, ROOT_PATH, BIOMART_PATH, GENERATE_DATA_PATH
 from consts.global_consts import DUPLEX_DICT
 from duplex.Duplex import Duplex
-from utils.logger import logger
+# from utils.logger import logger
 from utils.utilsfile import get_wrapper, read_csv, to_csv
-from utils.logger import logger
+# from utils.logger import logger
 from utils.utilsfile import get_wrapper, read_csv, to_csv
 
 
@@ -37,8 +37,9 @@ def do_duplex(mirna: str, target: str, cls: Duplex) -> Series:
 def duplex(method: str, fin: DataFrame):
 
     duplex_cls: Duplex = DUPLEX_DICT[method]
-    logger.info(f"{method} do_duplex to {fin}")
-    in_df: DataFrame = read_csv(Path(fin))
+    # logger.info(f"{method} do_duplex to {fin}")
+    # in_df: DataFrame = read_csv(Path(fin))
+    in_df = fin
     seq_cols = ['miRNA sequence', 'full_mrna', 'site']
     in_df[seq_cols] = in_df[seq_cols].replace(to_replace='T', value='U', regex=True)
     duplex_df = in_df.apply(func=get_wrapper(

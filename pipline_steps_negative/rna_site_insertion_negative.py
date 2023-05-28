@@ -4,15 +4,15 @@ import click
 
 from consts.global_consts import HUMAN_SITE_EXTENDED_LEN, SITE_EXTRA_CHARS
 from consts.pipeline_steps import ROOT_PATH
-from utils.logger import logger
+# from utils.logger import logger
 from utils.utilsfile import get_subsequence_by_coordinates, get_wrapper, read_csv, to_csv
 
 
-@click.command()
-@click.argument('fin', type=str)
-@click.argument('fout', type=str)
+# @click.command()
+# @click.argument('fin', type=str)
+# @click.argument('fout', type=str)
 def insert_site_by_coordinates(fin: str, fout:str):
-    logger.info(f"Insert site to {fin}")
+    # logger.info(f"Insert site to {fin}")
     df: DataFrame = read_csv(Path(fin))
     df["site"] = df.apply(func=get_wrapper(get_subsequence_by_coordinates,
                                            "mRNA sequence", "chimera_start", "chimera_end",
@@ -20,7 +20,7 @@ def insert_site_by_coordinates(fin: str, fout:str):
                           axis=1)
 
     to_csv(df, Path(fout))
-    logger.info(f"finish the site sequence insertion to {fin}")
+    # logger.info(f"finish the site sequence insertion to {fin}")
 
 
 
@@ -42,14 +42,10 @@ def get_site_from_extended_site(fin: DataFrame):
             return -1
         return start + len(site) - 1
 
-    logger.info(f"Insert site to {fin}")
-    df: DataFrame = read_csv(Path(fin))
+    df = fin
+    df["start"] = df.apply(func=get_wrapper(calc_chimera_start,'full_mrna', 'site'), axis=1)
 
-    df["start"] = df.apply(func=get_wrapper(calc_chimera_start,
-                                                    'full_mrna', 'site'), axis=1)
-    df["end"] = df.apply(func=get_wrapper(calc_chimera_end,
-                                                  'start', 'site'),
-                                 axis=1)
+    df["end"] = df.apply(func=get_wrapper(calc_chimera_end,'start', 'site'),axis=1)
 
     # df["site"] = df.apply(func=get_wrapper(get_subsequence_by_coordinates,
     #                                        "full_mrna", "start", "end", extra_chars=SITE_EXTRA_CHARS),axis=1)
@@ -63,7 +59,8 @@ def get_site_from_extended_site(fin: DataFrame):
 
 
 if __name__ == '__main__':
-    fin = ROOT_PATH / "generate_interactions/duplex_sample.csv"
-    fout = ROOT_PATH / "generate_interactions/duplex_rna_site.csv"
-    get_site_from_extended_site(fin, fout)
+    pass
+    # fin = ROOT_PATH / "generate_interactions/duplex_sample.csv"
+    # fout = ROOT_PATH / "generate_interactions/duplex_rna_site.csv"
+    # get_site_from_extended_site(fin, fout)
 

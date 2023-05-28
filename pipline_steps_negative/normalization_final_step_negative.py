@@ -6,7 +6,7 @@ import pandas as pd
 from pandas import DataFrame, Series
 from consts.global_consts import SITE_EXTRA_CHARS
 
-from utils.logger import logger
+# from utils.logger import logger
 from utils.utilsfile import get_subsequence_by_coordinates, get_subsequence_by_coordinates_no_exception, \
     get_substring_index, get_wrapper, read_csv, to_csv
 
@@ -29,13 +29,13 @@ def finalize(df: DataFrame):
 
     df['valid_row'] = True
 
-    logger.info("replace T with U")
+    # logger.info("replace T with U")
     seq_cols = ['miRNA sequence', 'site', 'full_mrna', 'mrna_bulge', 'mir_bulge', 'mrna_inter', 'mir_inter' ]
     df[seq_cols] = df[seq_cols].replace(to_replace='T', value='U', regex=True)
-    logger.info("Add seed family")
+    # logger.info("Add seed family")
     df["seed_family"] = df['miRNA sequence'].apply(extract_seed_family)
 
-    logger.info("Add valid/invalid flag")
+    # logger.info("Add valid/invalid flag")
     invalid_conditions = [pd.isna(df["miRNA sequence"]),
                           pd.isna(df["site"]),
                           df["miRNA sequence"].str.contains('X'),
@@ -59,10 +59,11 @@ def finalize(df: DataFrame):
 
 
 if __name__ == '__main__':
+    pass
     # cli()
-    fin = NEGATIVE_DATA_PATH / "tarBase/duplex_rna_site.csv"
-    fout = NEGATIVE_DATA_PATH / "tarBase/tarBase_human_negative_normalization.csv"
-    #finalize(fin, fout)
-    df = pd.read_csv(Path(fout))
-    print(df)
+    # fin = NEGATIVE_DATA_PATH / "tarBase/duplex_rna_site.csv"
+    # fout = NEGATIVE_DATA_PATH / "tarBase/tarBase_human_negative_normalization.csv"
+    # #finalize(fin, fout)
+    # df = pd.read_csv(Path(fout))
+    # print(df)
 

@@ -2,59 +2,75 @@ from pipline_steps_negative.duplex_step_negative import duplex as duplex_negativ
 from pipline_steps_negative.rna_site_insertion_negative import get_site_from_extended_site
 from pipline_steps_negative.normalization_final_step_negative import finalize
 from pipeline_steps.feature_extraction import feature_extraction
-from consts.global_consts import NEGATIVE_DATA_PATH, GENERATE_DATA_PATH
+# from consts.global_consts import NEGATIVE_DATA_PATH, GENERATE_DATA_PATH
+from pandas import DataFrame
 
 
-# step 1- formalization all the dataset for the same format
+def full_pipline(df_in: DataFrame, duplex=duplex_negative):
+
+    df_after_duplex = duplex('ViennaDuplex', df_in)
+    print("duplex stage : done")
+    df_after_extended_site = get_site_from_extended_site(df_after_duplex)
+    print("extending site stage : done")
+    df_after_finalize = finalize(df_after_extended_site)
+    print("finalize stage : done")
+    return feature_extraction(df_after_finalize)
 
 
-def full_pipline(name_of_method: str, name_of_file: str, duplex=duplex_negative):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def full_pipline(name_of_method: str, name_of_file: str, duplex=duplex_negative):
     # step 2- extract duplex of the interaction by VieannaDuplex
     # only for mock mirna
-    name_of_file_primary = name_of_method + "_" + name_of_file.split('_features')[0] + "_negative"
+    # name_of_file_primary = name_of_method + "_" + name_of_file.split('_features')[0] + "_negative"
 
     # name_of_file_primary = name_of_method + "_" + name_of_file
-    fout_primary = NEGATIVE_DATA_PATH / name_of_method
+    # fout_primary = NEGATIVE_DATA_PATH / name_of_method
 
-    name_of_file = name_of_file + ".csv"
-    fin = GENERATE_DATA_PATH / name_of_method / name_of_file
+    # name_of_file = name_of_file + ".csv"
+    # fin = GENERATE_DATA_PATH / name_of_method / name_of_file
 
-    name_of_file = name_of_file_primary + "_duplex.csv"
-    fout= fout_primary / name_of_file
+    # name_of_file = name_of_file_primary + "_duplex.csv"
+    # fout= fout_primary / name_of_file
 
     # negative interactions
-    print("###############Duplex NEGATIVE#############")
-    duplex('ViennaDuplex', fin, fout)
+    # print("###############Duplex NEGATIVE#############")
 
     # step 3- extract the site and his coordination's
-    fin = fout
-    print("###############Site#############")
+    # print("###############Site#############")
 
-    name_of_file = name_of_file_primary + "_site.csv"
-    fout = fout_primary / name_of_file
-    get_site_from_extended_site(fin, fout)
+    # name_of_file = name_of_file_primary + "_site.csv"
+    # fout = fout_primary / name_of_file
 
-    print("###############Normaliztion#############")
+    # print("###############Normaliztion#############")
 
     # step 4- normalization of the dataframe
-    fin = fout
-    name_of_file = name_of_file_primary + "_normalization.csv"
-    fout = fout_primary / name_of_file
-    finalize(fin, fout)
+    # name_of_file = name_of_file_primary + "_normalization.csv"
+    # fout = fout_primary / name_of_file
 
     # step 5- extract features
-    print("###############extract features#############")
+    # print("###############extract features#############")
 
-    fin = fout
-    name_of_file = name_of_file_primary + "_features.csv"
-    fout = fout_primary / name_of_file
-    name_of_file_ch = name_of_file_primary + "_check_before_filter.csv"
-    fout_check = fout_primary / name_of_file_ch
-    feature_extraction(fin, fout)
+    # name_of_file = name_of_file_primary + "_features.csv"
+    # fout = fout_primary / name_of_file
+    # name_of_file_ch = name_of_file_primary + "_check_before_filter.csv"
+    # fout_check = fout_primary / name_of_file_ch
 
 
 
-##### Prepar files#######
+##### Prepare files #######
 
 # method 1 - tarBase#
 # from generate_interactions.tarBase import reader
@@ -71,7 +87,7 @@ def full_pipline(name_of_method: str, name_of_file: str, duplex=duplex_negative)
 
 
 # Method 3 - non_overlapping_sites #
-from generate_interactions.non_overlapping_sites import generate
+# from generate_interactions.non_overlapping_sites import generate
 # from pipeline_steps.duplex_step import duplex as duplex_positive
 # generate.main()
 # full_pipline("non_overlapping_sites", "darnell_human_ViennaDuplex_features_negative", duplex_positive)
@@ -93,7 +109,7 @@ from generate_interactions.non_overlapping_sites import generate
 
 ##### method 5 - clip_interaction  ######
 # from generate_interactions.clip_interaction.run_method import run
-from pipeline_steps.duplex_step import duplex as duplex_positive
+# from pipeline_steps.duplex_step import duplex as duplex_positive
 # run()
 # full_pipline("clip_interaction", "clip_3", duplex_positive)
 
