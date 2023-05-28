@@ -90,15 +90,15 @@ def train_model(train_df,
 
 
 def evaluate_model(model=None, model_path=None, eval_set=None, plot_CM=False):
-    if model is None and model_path is None:
-        raise ValueError("Either a model or a model_path must be provided.")
+    # if model is None and model_path is None:
+    #     raise ValueError("Either a model or a model_path must be provided.")
 
     X_eval = eval_set.drop(['target', 'index', 'key'], axis=1)
     y_eval = eval_set['target']
-    # Load the model from file if model is not provided
-    if model is None:
-        model = xgb.Booster()
-        model.load_model(model_path)
+    # # Load the model from file if model is not provided
+    # if model is None:
+    #     model = xgb.Booster()
+    #     model.load_model(model_path)
 
     # Make predictions on the evaluation set
     y_pred = model.predict(X_eval)
