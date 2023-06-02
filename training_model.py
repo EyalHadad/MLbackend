@@ -15,7 +15,7 @@ def prepare_training_data(path_to_positive, path_to_negative, ratio=0.8,features
     """
 
     # Load the CSV files with the specified data types
-    positive_df = pd.read_csv(path_to_positive)
+    positive_df = pd.read_csv(path_to_positive, low_memory=False)
     negative_df = pd.read_csv(path_to_negative, skiprows=[1])
     if features_to_remove is None:
             features_to_remove = ['miRNA ID', 'miRNA sequence', 'Gene_ID', 'new_key', 'MiRBase ID',
@@ -95,12 +95,6 @@ def evaluate_model(model=None, model_path=None, eval_set=None, plot_CM=False):
 
     X_eval = eval_set.drop(['target', 'index', 'key'], axis=1)
     y_eval = eval_set['target']
-    # # Load the model from file if model is not provided
-    # if model is None:
-    #     model = xgb.Booster()
-    #     model.load_model(model_path)
-
-    # Make predictions on the evaluation set
     y_pred = model.predict(X_eval)
 
     # Calculate the accuracy score
@@ -119,10 +113,10 @@ def evaluate_model(model=None, model_path=None, eval_set=None, plot_CM=False):
 
 if __name__ == '__main__':
 
-    path_to_positive = r"C:\Users\user\Desktop\work\mirna\mirna for web\data\data_human\darnell_human.csv"
-    path_to_negative = r"C:\Users\user\Desktop\work\mirna\mirna for web\data\data_human\non_overlapping_sites_darnell_human_ViennaDuplex_negative_features.csv"
+    path_to_positive = r"C:\Users\user\Desktop\positive_features\pairing_beyond_features.csv"
+    path_to_negative = r"C:\Users\user\Desktop\negative_features\mockMirna_pairing_beyond_negative_features.csv"
     train, test = prepare_training_data(path_to_positive, path_to_negative, ratio=0.8)
     print('finished preparing data')
-    xgb_model = train_model(train, model_name='first_model',save_model=True)
+    xgb_model = train_model(train, model_name='Worm',save_model=True)
     print('trained model')
     evaluate_model(model=xgb_model, eval_set=test, plot_CM=True)
