@@ -1,35 +1,241 @@
-import pandas as pd
-from full_pipline_positive import full_pipline as full_pipline_positive
-from full_pipline_negative import full_pipline as full_pipline_negative
+from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
+from dal.db_connection import init_db_connector
+import dal.organisms as organisms
+from flask_compress import Compress
+import dal.interactions as interactions
+import dal.download as download
+import dal.statistics as statistics
+from configurator import Configurator
+from waitress import serve
 
 
-def extract_features_from_sequences(input_details):
-    if input_details[5] != None:
-        res = full_pipline_positive(input_details)
-    else:
-        res = full_pipline_negative(input_details,"to_delete")
-    return res
+app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
+Compress(app)
+app.config["COMPRESS_REGISTER"] = False
+app.config['COMPRESS_ALGORITHM'] = 'gzip'
 
 
-def get_prediction(seq_features,org_name):
-    #TODO add load_model function
-    model = load_model(org_name)
-    pred = model.predict(seq_features)
-    return pred
+compress = Compress()
+compress.init_app(app)
+
+init_db_connector(app)
 
 
-def predict_sequences(miRNA_seq=None, mRNA_seq=None, site_seq=None,org_name="Human"):
-    columns = ['key', 'paper name', 'organism', 'miRNA ID', 'miRNA sequence', 'site', 'region', 'valid_row',
-                        'full_mrna', 'Gene_ID', 'region count']
-    values = [None] * len(columns)
-    values[4] = miRNA_seq
-    values[5] = site_seq
-    values[8] = mRNA_seq
-    input_details = pd.DataFrame([values], columns = columns)
-    seq_features = extract_features_from_sequences(input_details)
-    prediction = get_prediction(seq_features,org_name)
-    return prediction
+@app.route('/api')
+@cross_origin("*")
+def hello_world():
+    to_ret = {
+        'status': 'ok',
+        'value': 'Hello from micro-message RNA project!@'
+    }
+    return jsonify(to_ret)
+
+@app.route('/')
+@cross_origin("*")
+def end_without_api():
+    to_ret = {
+        'status': 'ok',
+        'value': 'Go to api'
+    }
+    return jsonify(to_ret)
+
+@app.route('/api/organisms/details', methods=['GET'])
+@compress.compressed()
+def get_organisms_details():
+    organisms_list = []
+    try:
+        with_search_options = request.args.get('searchOptions')
+        with_search_options = eval(with_search_options.lower().capitalize())
+    except Exception as e:
+        print('searchOptions is null or not set properly (as true or flase)')
+        with_search_options = False
+    try:
+        organisms_list = organisms.get_organisms_details_with_features(with_options=with_search_options)
+    except Exception as e:
+        print(f'app failed to get organisms. error: {str(e)}')
+    return organisms_list
+
+
+@app.route('/api/organisms/datasets/<int:data_set_id>/interactions', methods=['GET'])
+def get_data_set_interactions(data_set_id):
+    interactions = []
+    try:
+        interactions = organisms.get_data_set_interactions(data_set_id)
+    except Exception as e:
+        print(f'app failed to get interactions of data set id- {data_set_id}. error: {str(e)}')
+    return interactions
+
+
+@app.route('/api/interactions', methods=['GET'])
+def get_interactions():
+    interactions_result = []
+    try:
+        data_sets_ids = request.args.getlist('datasetsIds')
+        seed_families = request.args.getlist('seedFamilies')
+        mirna_ids = request.args.getlist('miRnaIds')
+        mirna_seqs = request.args.getlist('miRnaSeqs')
+        site_types = request.args.getlist('siteTypes')
+        gene_ids = request.args.getlist('geneIds')
+        regions = request.args.getlist('regions')
+        interactions_result = interactions.get_interactions(data_sets_ids, seed_families, mirna_ids, mirna_seqs, site_types, gene_ids, regions)
+    except Exception as e:
+        print(f'app failed to get interactions. error: {str(e)}')
+    return interactions_result
+
+
+@app.route('/api/generalSearchInteractions/interactions', methods=['GET'])
+def get_general_interactions():
+    interactions_result = []
+    try:
+        query_string = request.args.get('q')
+        interactions_result = interactions.get_interactions_general_search(query_string)
+    except Exception as e:
+        print(f'app failed to get general interactions. error: {str(e)}')
+    return interactions_result
+
+@app.route('/api/organisms/datasets/<int:data_set_id>/interactions/download', methods=['GET'])
+def get_full_data_set(data_set_id):
+    response = None
+    try:
+        response = download.download_data(data_set_id=data_set_id)
+    except Exception as e:
+        print(f'app failed to get general interactions. error: {str(e)}')
+    return response
+
+@app.route('/api/interactions/download', methods=['GET'])
+def get_search_data():
+    response = None
+    file_path = None
+    try:
+        data_sets_ids = request.args.getlist('datasetsIds')
+        seed_families = request.args.getlist('seedFamilies')
+        mirna_ids = request.args.getlist('miRnaIds')
+        mirna_seqs = request.args.getlist('miRnaSeqs')
+        sites = request.args.getlist('sites')
+        gene_ids = request.args.getlist('geneIds')
+        regions = request.args.getlist('regions')
+        file_path = download.get_interactions_for_download(data_sets_ids, seed_families, 
+                                                           mirna_ids, mirna_seqs, sites, 
+                                                           gene_ids, regions)
+        if file_path:
+            response = download.download_data(file_path=file_path)
+        else:
+            return None
+    except Exception as e:
+        print(f'app failed to get general interactions. error: {str(e)}')
+    return response
+
+@app.route('/api/generalSearchInteractions/interactions/download', methods=['GET'])
+def get_general_search_data():
+    response = None
+    file_path = None
+    try:
+        query = request.args.get('q')
+        file_path = download.get_interactions_general_search_for_download(query)
+        if file_path:
+            response = download.download_data(file_path=file_path)
+        else:
+            return None
+    except Exception as e:
+        print(f'app failed to get general interactions. error: {str(e)}')
+    return response
+    
+
+@app.route('/api/interactionOuterData/<int:interaction_id>', methods=['GET'])
+def get_interaction_data(interaction_id):
+    interaction_id_data_result = []
+    try:
+        interaction_id_data_result = interactions.get_interaction_id_data(interaction_id)
+    except Exception as e:
+        print(f'app failed to get interaction id data. error: {str(e)}')
+    return interaction_id_data_result
+
+
+@app.route('/api/statistics/general', methods=['GET'])
+def get_general_stats_info():
+    stats = []
+    try:
+        stats = statistics.get_general_stats()
+    except Exception as e:
+        print(f'app failed to get general stats. error: {str(e)}')
+    return stats
+
+
+@app.route('/api/statistics/update_general', methods=['GET'])
+def update_general_stats_info():
+    try:
+        statistics.update_general_stats()
+    except Exception as e:
+        print(f'app failed to get general stats. error: {str(e)}')
+    return "Update succeeded"
+
+
+@app.route('/api/statistics/oneD', methods=['GET'])
+def get_one_d_statistic():
+    one_d_statistics = {}
+    try:
+        data_sets_ids = request.args.getlist('datasetsIds')
+        seed_families = request.args.getlist('seedFamilies')
+        mirna_ids = request.args.getlist('miRnaIds')
+        mirna_seqs = request.args.getlist('miRnaSeqs')
+        site_types = request.args.getlist('siteTypes')
+        gene_ids = request.args.getlist('geneIds')
+        regions = request.args.getlist('regions')
+        feature_name = request.args.get('feature')
+        one_d_statistics = statistics.get_one_d(data_sets_ids, seed_families,
+                                                mirna_ids, mirna_seqs,
+                                                site_types, gene_ids,
+                                                regions, feature_name)
+    except Exception as e:
+        print(f'app failed to get general stats. error: {str(e)}')
+    return one_d_statistics
+
+
+@app.route('/api/statistics/<int:dataset_id>', methods=['GET'])
+def get_dataset_statistic(dataset_id):
+    try:
+        one_d_statistics = statistics.get_dataset_statistics(dataset_id)
+    except Exception as e:
+        print(f'app failed to get general stats. error: {str(e)}')
+    return one_d_statistics
+
+
+@app.route('/api/statistics/twoD', methods=['GET'])
+def get_two_d_statistic():
+    two_d_statistics = {}
+    try:
+        data_sets_ids = request.args.getlist('datasetsIds')
+        seed_families = request.args.getlist('seedFamilies')
+        mirna_ids = request.args.getlist('miRnaIds')
+        mirna_seqs = request.args.getlist('miRnaSeqs')
+        site_types = request.args.getlist('siteTypes')
+        gene_ids = request.args.getlist('geneIds')
+        regions = request.args.getlist('regions')
+        feature_name_1 = request.args.get('firstFeature')
+        feature_name_2 = request.args.get('secondFeature')
+        two_d_statistics = statistics.get_two_d(data_sets_ids, seed_families,
+                                                mirna_ids, mirna_seqs,
+                                                site_types, gene_ids,
+                                                regions, feature_name_1, feature_name_2)
+    except Exception as e:
+        print(f'app failed to get general stats. error: {str(e)}')
+    return two_d_statistics
 
 
 if __name__ == '__main__':
-    predict_sequences('UGAGGUAGUAGGUUGUAUAGUU', 'ACCAACUCCUCUUGACCGAUGUAGAUCACCUGGAAUGCUUGAA', 'UAUUGCACUUGUCCCGGCCUGU')
+    confg = Configurator()
+    mode = confg.get_mode()
+    if mode == 'dev':
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    else:
+        try:
+            organisms.get_organisms_details_with_features(with_options=True)
+        except Exception as e:
+            print(str(e))
+        serve(app, host='0.0.0.0', port=5000, threads=50)
+
+
